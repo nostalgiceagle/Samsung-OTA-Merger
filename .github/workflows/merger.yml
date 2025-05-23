@@ -1,0 +1,37 @@
+name: Merge Firmware
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'URL to download Base Firmware (BASE.zip)'
+        required: true
+        type: string
+      ota_url:
+        description: 'URL to download OTA Update ZIP (UPDATE.zip)'
+        required: true
+        type: string
+
+jobs:
+  download_and_merge:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: "Change merger script's permission to 755"
+        run: chmod +x merge.sh
+
+      - name: Download BASE Firmware
+        run: wget "${{ github.event.inputs.base_url }}" -O BASE.zip
+
+      - name: Download BASE Firmware
+        run: unzip BASE.zip
+        
+      - name: Download OTA Update ZIP
+        run: wget "${{ github.event.inputs.ota_url }}" -O UPDATE.zip
+
+      - name: Execute merge.sh
+        run: ./merge.sh AP*.md5 UPDATE.zip
+
