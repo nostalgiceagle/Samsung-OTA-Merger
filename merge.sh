@@ -31,37 +31,48 @@ TOOLS="$HOME/.local/bin/tools"
 
 DEPS(){
     local DIR="$(readlink -f .)"
-  
+    local SRC_DIR="$TOOLS/sources"
+
+    mkdir -p "$TOOLS" "$SRC_DIR"
 
     if [ ! -f "$TOOLS/lpunpack" ] || [ ! -f "$TOOLS/simg2img" ]; then
-        if [ ! -d "$TOOLS/android-tools" ]; then
-            echo "Cloning android-tools"
-            git clone "https://github.com/nmeum/android-tools.git" "$TOOLS/android-tools" -q
+        echo "Preparing android-tools..."
+
+        if [ ! -d "$SRC_DIR/android-tools" ]; then
+            echo "Cloning android-tools..."
+            git clone --depth=1 https://github.com/nmeum/android-tools "$SRC_DIR/android-tools"
         fi
-        cd "$TOOLS/android-tools"
-        git submodule update --quiet --init --recursive
-        [ -d "$(pwd)/.git/rebase-apply" ] && git am "--abort"
-        cmake -B "build" -DCMAKE_C_COMPILER="clang" -DCMAKE_CXX_COMPILER="clang++" -DCMAKE_SYSTEM_NAME="$(uname -s)" -DCMAKE_SYSTEM_PROCESSOR="$(uname -m)" \
-                         -DCMAKE_BUILD_TYPE="Release" -DANDROID_TOOLS_USE_BUNDLED_FMT="ON" -DANDROID_TOOLS_USE_BUNDLED_LIBUSB="ON" >/dev/null
-        echo "Building android-tools"
-        make "-j$(nproc --all)" -C "build" >/dev/null
-   
-        [ ! -d "$TOOLS" ] && mkdir -p "$TOOLS"
-        cp -fa "build/vendor/lpunpack" "build/vendor/simg2img" "$TOOLS"
+
+        cd "$SRC_DIR/android-tools"
+        git submodule update --init --recursive
+
+        cmake -B build -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ \
+              -DCMAKE_SYSTEM_NAME="$(uname -s)" -DCMAKE_SYSTEM_PROCESSOR="$(uname -m)" \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DANDROID_TOOLS_USE_BUNDLED_FMT=ON \
+              -DANDROID_TOOLS_USE_BUNDLED_LIBUSB=ON >/dev/null
+
+        echo "Building android-tools..."
+        make -j"$(nproc)" -C build >/dev/null
+
+        cp -fa build/vendor/lpunpack build/vendor/simg2img "$TOOLS/"
     fi
-    
+
     if [ ! -f "$TOOLS/BlockImageUpdate" ]; then
-        if [ ! -d "$TOOLS/imgpatchtools" ]; then
-            echo "Cloning imgpatchtools"
-            git clone "https://github.com/erfanoabdi/imgpatchtools.git" "$TOOLS/imgpatchtools" -q
+        echo "Preparing imgpatchtools..."
+
+        if [ ! -d "$SRC_DIR/imgpatchtools" ]; then
+            echo "Cloning imgpatchtools..."
+            git clone --depth=1 https://github.com/erfanoabdi/imgpatchtools "$SRC_DIR/imgpatchtools"
         fi
-        cd "$TOOLS/imgpatchtools"
-        make >/dev/null
-   
-        [ ! -d "$TOOLS" ] && mkdir -p "$TOOLS"
-        cp -fa "bin/BlockImageUpdate" "$TOOLS"
+
+        cd "$SRC_DIR/imgpatchtools"
+        echo "Building BlockImageUpdate..."
+        make -j"$(nproc)" >/dev/null
+
+        cp -fa bin/BlockImageUpdate "$TOOLS/"
     fi
-    
+
     cd "$DIR"
 }
 
