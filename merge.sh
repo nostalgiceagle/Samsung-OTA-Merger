@@ -197,11 +197,6 @@ echo "Base script by @EndaDwagon (GitHub)"
 echo "Completely rewriten by @Ksawlii (GitHub)"
 echo ""
 
-if [ ! -d "$TOOLS" ]; then
-    echo "ERROR: bin dir not found"
-    exit 1
-fi
-
 # TODO: Improve args
 if [ "$3" = "c" ]; then
     CLEAN 
